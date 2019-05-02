@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  pulsar-standalone:
+  pulsar:
     image: apachepulsar/pulsar
     expose:
       - 8080
@@ -15,21 +15,26 @@ services:
 
   pulsar-dashboard:
     image: apachepulsar/pulsar-dashboard
-    depends_on:
-      - pulsar-standalone
     ports:
       - "8081:80"
+    depends_on:
+      - pulsar
     environment:
-      - SERVICE_URL=http://standalone:8080
+      - SERVICE_URL=http://pulsar:8080
 
   api:
     build: ./api
     ports:
       - "8080:8080"
     depends_on:
-      - pulsar-standalone
+      - pulsar
+    environment:
+      - SERVICE_URL=http://pulsar:8080
 
   github-service:
     build: ./github_service
     depends_on:
-      - pulsar-standalone
+      - pulsar
+    environment:
+      - SERVICE_URL=http://pulsar:8080
+      - PYTHONUNBUFFERED=1
