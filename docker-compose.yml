@@ -18,12 +18,14 @@ services:
     depends_on:
       - pulsar-standalone
     ports:
-      - "80:80"
+      - "8081:80"
     environment:
       - SERVICE_URL=http://standalone:8080
 
   api:
     build: ./api
+    ports:
+      - "8080:8080"
     depends_on:
       - pulsar-standalone
 
