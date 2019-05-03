@@ -35,7 +35,10 @@ public class TaskProducer {
     @PostConstruct
     public void startClient() throws IOException {
         try {
-            client = PulsarClient.builder().serviceUrl(SERVICE_URL).build();
+            client = PulsarClient.builder()
+                .allowTlsInsecureConnection(true)
+                .serviceUrl(SERVICE_URL)
+                .build();
 
             val msgSchema = JSONSchema.of(Task.class);
 
