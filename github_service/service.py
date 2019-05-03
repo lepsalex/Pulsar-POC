@@ -5,7 +5,7 @@ print("Github Service start!")
 
 url = os.getenv('SERVICE_URL', 'pulsar://localhost:6650')
 client = pulsar.Client(url, tls_allow_insecure_connection=True)
-consumer = client.subscribe(['task-new'], 'github-service')
+consumer = client.subscribe(['task-new', 'task-update'], 'github-service')
 
 print("Github Service running ...")
 
