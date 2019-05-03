@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.NoArgsConstructor;
+import lombok.val;
 import lombok.extern.log4j.Log4j2;
 
 import org.apache.pulsar.client.api.CompressionType;
@@ -36,12 +37,14 @@ public class TaskProducer {
         try {
             client = PulsarClient.builder().serviceUrl(SERVICE_URL).build();
 
-            taskNewProducer = client.newProducer(JSONSchema.of(Task.class)).topic(CREATE_TOPIC_NAME)
+            val msgSchema = JSONSchema.of(Task.class);
+
+            taskNewProducer = client.newProducer(msgSchema).topic(CREATE_TOPIC_NAME)
                     .compressionType(CompressionType.LZ4).create();
     
             log.info("Created producer for the topic {}", CREATE_TOPIC_NAME);
     
-            taskUpdateProducer = client.newProducer(JSONSchema.of(Task.class)).topic(UPDATE_TOPIC_NAME)
+            taskUpdateProducer = client.newProducer(msgSchema).topic(UPDATE_TOPIC_NAME)
                     .compressionType(CompressionType.LZ4).create();
     
             log.info("Created producer for the topic {}", UPDATE_TOPIC_NAME);
