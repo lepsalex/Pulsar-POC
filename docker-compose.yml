@@ -33,10 +33,9 @@ services:
     environment:
       - SERVICE_URL=http://standalone:8080
 
-  github-service:
-    build: ./github_service
+  github-integration:
+    build: ./github-integration
     depends_on:
       - standalone
     environment:
       - SERVICE_URL=http://standalone:8080
-      - PYTHONUNBUFFERED=1
