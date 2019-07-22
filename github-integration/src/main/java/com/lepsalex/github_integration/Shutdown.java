@@ -13,6 +13,6 @@ public class Shutdown extends Thread {
 
     @Override
     public void run() {
-        plugIntClient.shutdown();
+        plugIntClient.closePulsarConnection();
     }
 }
