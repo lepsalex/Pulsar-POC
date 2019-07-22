@@ -9,10 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 public class Shutdown extends Thread {
 
     @NonNull
-    Client client;
+    PlugIntClient plugIntClient;
 
     @Override
     public void run() {
-        client.shutdown();
+        plugIntClient.shutdown();
     }
 }

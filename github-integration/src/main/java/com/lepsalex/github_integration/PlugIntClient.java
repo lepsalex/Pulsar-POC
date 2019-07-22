@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
-public class Client {
+public class PlugIntClient {
     PulsarClient client;
 
     public List<String> topics = Arrays.asList(
@@ -53,7 +53,7 @@ public class Client {
             log.warn("Github Service Integration Shutting Down!");
             client.close();
         } catch (PulsarClientException err) {
-            log.error("Failed to close Github Service Integration properly (client connection not closed): " + err.getMessage());
+            log.error("Failed to close Github Service Integration properly (plugIntClient connection not closed): " + err.getMessage());
         }
     }
 
