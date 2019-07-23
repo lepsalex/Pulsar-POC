@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 public class Task {
     private final long id;
     private final String project;
-    private final String name;
+    private final String title;
     private final String description;
-    private final String status;
+    private final TaskStatus status;
 }

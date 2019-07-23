@@ -2,21 +2,16 @@ package com.lepsalex.github_integration;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.kohsuke.github.GHIssue;
-import org.kohsuke.github.GHIssueState;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
+import org.kohsuke.github.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 public class GithubClient {
     GitHub gitHub;
 
-    final private Map<String, String> projectToRepoMapping = new HashMap<String, String>()
-    {
+    final private Map<String, String> projectToRepoMapping = new HashMap<String, String>() {
         {
             put("awesome", "lepsalex/Pulsar-POC");
             put("possum", "lepsalex/Pulsar-POC");
@@ -24,48 +19,80 @@ public class GithubClient {
         }
     };
 
-    final private Map<String, String> statusMapping = new HashMap<String, GHIssueState>() {
-        {
-            {
-                put("open", GHIssueState.OPEN);
-                put("closed", GHIssueState.CLOSED);
-            }
-        };
-    }
-
     public GithubClient() throws IOException {
         log.info("Connecting to Github ...");
         gitHub = GitHub.connect();
     }
 
-    public void createIssue(Task task) throws IOException {
-        val repo = getRepo(task.getProject());
-        createIssue(task, repo);
-    }
-
-    public void createIssue(Task task, GHRepository repo) {
-        try {
-            repo.createIssue(task.getName())
-                    .body(task.getDescription())
-                    .label(task.getProject())
-                    .create();
-        } catch (IOException err) {
-            log.error("Error getting github project!", err);
-        }
-    }
-
-    public void updateIssue(Task task) {
+    public Optional<GHIssue> createIssue(Task task){
         try {
             val repo = getRepo(task.getProject());
-            val issues = repo.getIssues(GHIssueState.ALL);
-
+            return createIssue(task, repo);
         } catch (IOException err) {
-            log.error("Error getting github project!", err);
+            log.error("Error creating issue!", err);
+            return Optional.empty();
         }
     }
 
-    private static GHIssue findIssue(String title, String project) {
+    private Optional<GHIssue> createIssue(Task task, GHRepository repo) {
+        try {
+            return Optional.of(repo.createIssue(task.getTitle())
+                    .body(task.getDescription())
+                    .label(task.getProject())
+                    .create());
+        } catch (IOException err) {
+            log.error("Error getting github project!", err);
+            return Optional.empty();
+        }
+    }
 
+    public Optional<GHIssue> updateIssue(Task task) {
+        try {
+            val repo = getRepo(task.getProject());
+            Optional<GHIssue> issue = findIssue(repo, task.getTitle(), task.getProject());
+
+            if (issue.isPresent()) {
+                val existingIssue = issue.get();
+                try {
+                    existingIssue.setBody(task.getDescription());
+
+                    if (task.getStatus() == TaskStatus.OPEN) {
+                        existingIssue.reopen();
+                    } else {
+                        existingIssue.close();
+                    }
+
+                    return Optional.of(existingIssue);
+                } catch (IOException err) {
+                    log.error(String.format("Error updating issue %d!", existingIssue.getNumber()), err);
+                    return Optional.empty();
+                }
+            } else {
+                return createIssue(task, repo);
+            }
+        } catch (IOException err) {
+            log.error("Error updating issue!", err);
+            return Optional.empty();
+        }
+    }
+
+    private Optional<GHIssue> findIssue(GHRepository repo, String title, String project) throws IOException {
+        return repo.getIssues(GHIssueState.ALL)
+                .stream()
+                .filter(issue -> title.equals(issue.getTitle()) && findLabel(issue, project).isPresent())
+                .findFirst();
+    }
+
+    private Optional<GHLabel> findLabel(GHIssue issue, String labelName) {
+        try {
+            return issue.getLabels()
+                    .stream()
+                    .filter(label -> label.getName().equals(labelName))
+                    .findFirst();
+        } catch (IOException err) {
+            log.error(String.format("Error searching for label %s!", labelName), err);
+            return Optional.empty();
+        }
     }
 
     private GHRepository getRepo(String project) throws IOException {

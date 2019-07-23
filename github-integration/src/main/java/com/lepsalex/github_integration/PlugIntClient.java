@@ -2,27 +2,32 @@ package com.lepsalex.github_integration;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.apache.pulsar.client.api.Consumer;
-import org.apache.pulsar.client.api.ConsumerBuilder;
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.*;
+import org.apache.pulsar.client.impl.schema.JSONSchema;
+import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 public class PlugIntClient {
     PulsarClient pulsarClient;
-    GitHub gitHub;
-    GHRepository repo;
+    GithubClient gitHubClient;
 
-    public List<String> topics = Arrays.asList(
-            "task-new",
-            "task-update"
-    );
+    public enum topic {
+        TASK_NEW,
+        TASK_UPDATE
+    }
+
+    public Map<topic, String> topics = new HashMap<topic, String>() {
+        {
+            put(topic.TASK_NEW, "task-new");
+            put(topic.TASK_UPDATE, "task-update");
+        }
+    };
 
     public void run() {
 
@@ -31,10 +36,9 @@ public class PlugIntClient {
         log.info("Connecting to Github ...");
 
         try {
-            gitHub = GitHub.connect();
-            repo = gitHub.getRepository("lepsalex/Pulsar-POC");
+            gitHubClient = new GithubClient();
         } catch (IOException err) {
-            log.error("Error getting github project!", err);
+            log.error("Error connecting to GitHub!", err);
             return;
         }
 
@@ -52,11 +56,11 @@ public class PlugIntClient {
                     .build();
 
             ConsumerBuilder consumerBuilder = pulsarClient
-                    .newConsumer()
+                    .newConsumer(JSONSchema.of(Task.class))
                     .subscriptionName("github-integration-service");
 
             Consumer<Task> consumer = consumerBuilder
-                    .topics(topics)
+                    .topics(Arrays.asList(topics.values()))
                     .subscribe();
 
             receiveMessageFromConsumer(consumer);
@@ -79,12 +83,32 @@ public class PlugIntClient {
     }
 
     private void receiveMessageFromConsumer(Consumer<Task> consumer) {
-        log.info(String.format("Listening on topics: %s", String.join(", ", topics)));
+        log.info(String.format("Listening on topics: %s", String.join(", ", topics.values())));
 
         consumer.receiveAsync().thenAccept(message -> {
+            Optional<GHIssue> issue;
+
             try {
-                consumer.acknowledge(message.getMessageId());
-                log.info(new String(message.getData()));
+                val topicType = topic.valueOf(message.getTopicName().toUpperCase());
+
+                switch (topicType) {
+                    case TASK_NEW:
+                        issue = gitHubClient.createIssue(message.getValue());
+                        break;
+                    case TASK_UPDATE:
+                        issue = gitHubClient.updateIssue(message.getValue());
+                        break;
+                    default:
+                        log.warn(String.format("Unknown topic type: %s", message.getTopicName()));
+                        issue = Optional.empty();
+                }
+
+                if (issue.isPresent()) {
+                    consumer.acknowledge(message.getMessageId());
+                } else {
+                    consumer.negativeAcknowledge(message.getMessageId());
+                    log.warn("Failed to create issue for: ", message.getData());
+                }
             } catch (PulsarClientException err) {
                 consumer.negativeAcknowledge(message.getMessageId());
                 log.error(err.getMessage());
