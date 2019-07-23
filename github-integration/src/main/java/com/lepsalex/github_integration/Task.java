@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Task {
     private final long id;
+    private final String project;
     private final String name;
     private final String description;
+    private final String status;
 }
