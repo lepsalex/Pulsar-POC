@@ -1,14 +1,15 @@
 package com.lepsalex.github_integration;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NonNull;
 
 @Data
-@RequiredArgsConstructor
-public class Task {
+@AllArgsConstructor
+class Task {
     private final long id;
-    private final String project;
-    private final String title;
-    private final String description;
-    private final TaskStatus status;
+    @NonNull final String project;
+    @NonNull private final String title;
+    @NonNull private final String description;
+    @NonNull private final String status;
 }

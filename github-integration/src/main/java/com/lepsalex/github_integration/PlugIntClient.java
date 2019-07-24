@@ -5,10 +5,7 @@ import lombok.val;
 import org.apache.pulsar.client.api.*;
 import org.apache.pulsar.client.impl.schema.JSONSchema;
 import org.kohsuke.github.GHIssue;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
 
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.util.*;
 
@@ -17,17 +14,8 @@ public class PlugIntClient {
     PulsarClient pulsarClient;
     GithubClient gitHubClient;
 
-    public enum topic {
-        TASK_NEW,
-        TASK_UPDATE
-    }
-
-    public Map<topic, String> topics = new HashMap<topic, String>() {
-        {
-            put(topic.TASK_NEW, "task-new");
-            put(topic.TASK_UPDATE, "task-update");
-        }
-    };
+    private String CREATE_TOPIC_NAME = "task-new";
+    private String UPDATE_TOPIC_NAME = "task-update";
 
     public void run() {
 
@@ -55,22 +43,30 @@ public class PlugIntClient {
                     .serviceUrl(url)
                     .build();
 
-            ConsumerBuilder consumerBuilder = pulsarClient
-                    .newConsumer(JSONSchema.of(Task.class))
-                    .subscriptionName("github-integration-service");
+            val topicList = Arrays.asList(CREATE_TOPIC_NAME, UPDATE_TOPIC_NAME);
 
-            Consumer<Task> consumer = consumerBuilder
-                    .topics(Arrays.asList(topics.values()))
+            Consumer<Task> consumer = pulsarClient
+                    .newConsumer(JSONSchema.of(Task.class))
+                    .subscriptionName("github-integration-service")
+                    .subscriptionType(SubscriptionType.Shared)
+                    .topics(topicList)
                     .subscribe();
 
-            receiveMessageFromConsumer(consumer);
+            log.info(String.format("Listening on topics: %s", String.join(", ", topicList)));
+
+            do {
+                Message<Task> message = consumer.receive();
+                try {
+                    handleMessage(consumer, message);
+                } catch (SchemaSerializationException ex) {
+                    consumer.negativeAcknowledge(message.getMessageId());
+                    log.warn("Failed to handle message: ", message.getMessageId().toByteArray());
+                }
+            } while (true);
         } catch (PulsarClientException err) {
             log.error(err.getMessage());
             closePulsarConnection();
-            return;
         }
-
-        log.info("Github Integration Service Running ...");
     }
 
     public void closePulsarConnection() {
@@ -82,39 +78,24 @@ public class PlugIntClient {
         }
     }
 
-    private void receiveMessageFromConsumer(Consumer<Task> consumer) {
-        log.info(String.format("Listening on topics: %s", String.join(", ", topics.values())));
+    private void handleMessage(Consumer<Task> consumer, Message<Task> message) throws PulsarClientException, SchemaSerializationException {
+        Optional<GHIssue> issue;
 
-        consumer.receiveAsync().thenAccept(message -> {
-            Optional<GHIssue> issue;
+        if (message.getTopicName().contains(CREATE_TOPIC_NAME)) {
+            issue = gitHubClient.createIssue(message.getValue());
+        } else if (message.getTopicName().contains(UPDATE_TOPIC_NAME)) {
+            issue = gitHubClient.updateIssue(message.getValue());
+        } else {
+            log.warn(String.format("Unknown topic type: %s", message.getTopicName()));
+            issue = Optional.empty();
+        }
 
-            try {
-                val topicType = topic.valueOf(message.getTopicName().toUpperCase());
-
-                switch (topicType) {
-                    case TASK_NEW:
-                        issue = gitHubClient.createIssue(message.getValue());
-                        break;
-                    case TASK_UPDATE:
-                        issue = gitHubClient.updateIssue(message.getValue());
-                        break;
-                    default:
-                        log.warn(String.format("Unknown topic type: %s", message.getTopicName()));
-                        issue = Optional.empty();
-                }
-
-                if (issue.isPresent()) {
-                    consumer.acknowledge(message.getMessageId());
-                } else {
-                    consumer.negativeAcknowledge(message.getMessageId());
-                    log.warn("Failed to create issue for: ", message.getData());
-                }
-            } catch (PulsarClientException err) {
-                consumer.negativeAcknowledge(message.getMessageId());
-                log.error(err.getMessage());
-            }
-
-            receiveMessageFromConsumer(consumer);
-        });
+        if (issue.isPresent()) {
+            consumer.acknowledge(message);
+            log.info("Message handled successfully!");
+        } else {
+            consumer.negativeAcknowledge(message.getMessageId());
+            log.warn("Failed to handle message: ", message.getMessageId().toByteArray());
+        }
     }
 }

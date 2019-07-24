@@ -1,12 +1,14 @@
 package com.lepsalex.api;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Data
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class Task {
     private final long id;
-    private final String name;
+    private final String project;
+    private final String title;
     private final String description;
+    private final String status;
 }

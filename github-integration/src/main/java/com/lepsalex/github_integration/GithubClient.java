@@ -36,10 +36,13 @@ public class GithubClient {
 
     private Optional<GHIssue> createIssue(Task task, GHRepository repo) {
         try {
-            return Optional.of(repo.createIssue(task.getTitle())
+            val newIssue = Optional.of(repo.createIssue(task.getTitle())
                     .body(task.getDescription())
                     .label(task.getProject())
                     .create());
+
+            log.info("Issue succesfully udpated!", newIssue);
+            return newIssue;
         } catch (IOException err) {
             log.error("Error getting github project!", err);
             return Optional.empty();
@@ -56,12 +59,13 @@ public class GithubClient {
                 try {
                     existingIssue.setBody(task.getDescription());
 
-                    if (task.getStatus() == TaskStatus.OPEN) {
+                    if (task.getStatus().equals("open")) {
                         existingIssue.reopen();
                     } else {
                         existingIssue.close();
                     }
 
+                    log.info("Issue succesfully udpated!", existingIssue);
                     return Optional.of(existingIssue);
                 } catch (IOException err) {
                     log.error(String.format("Error updating issue %d!", existingIssue.getNumber()), err);

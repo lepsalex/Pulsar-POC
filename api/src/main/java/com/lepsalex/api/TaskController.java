@@ -22,12 +22,6 @@ public class TaskController {
     @Autowired
     TaskProducer taskProducer;
 
-    @GetMapping("/task/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable(value = "id") Long taskId) {
-        val dummyTask = new Task(taskId, "Not a Real Task", "Only being used to demo this api");
-        return ResponseEntity.ok().body(dummyTask);
-    }
-
     @PostMapping("/task")
     public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
         // Publish event to queue
