@@ -3,7 +3,7 @@ syntax = "proto3";
 package com.lepsalex.integrations;
 
 option java_package = "com.lepsalex.integrations";
-option java_outer_classname = "TaskMessage";
+option java_outer_classname = "TaskProtos";
 
 message Task {
     uint64 id = 1;

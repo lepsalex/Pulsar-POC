@@ -1,5 +1,6 @@
 package com.lepsalex.github_integration;
 
+import com.lepsalex.integrations.TaskProtos;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.pulsar.client.api.*;
@@ -45,8 +46,8 @@ public class PlugIntClient {
 
             val topicList = Arrays.asList(CREATE_TOPIC_NAME, UPDATE_TOPIC_NAME);
 
-            Consumer<Task> consumer = pulsarClient
-                    .newConsumer(JSONSchema.of(Task.class))
+            Consumer<TaskProtos.Task> consumer = pulsarClient
+                    .newConsumer(JSONSchema.of(TaskProtos.Task.class))
                     .subscriptionName("github-integration-service")
                     .subscriptionType(SubscriptionType.Shared)
                     .topics(topicList)
@@ -55,7 +56,7 @@ public class PlugIntClient {
             log.info(String.format("Listening on topics: %s", String.join(", ", topicList)));
 
             do {
-                Message<Task> message = consumer.receive();
+                Message<TaskProtos.Task> message = consumer.receive();
                 try {
                     handleMessage(consumer, message);
                 } catch (SchemaSerializationException ex) {
@@ -78,7 +79,7 @@ public class PlugIntClient {
         }
     }
 
-    private void handleMessage(Consumer<Task> consumer, Message<Task> message) throws PulsarClientException, SchemaSerializationException {
+    private void handleMessage(Consumer<TaskProtos.Task> consumer, Message<TaskProtos.Task> message) throws PulsarClientException, SchemaSerializationException {
         Optional<GHIssue> issue;
 
         if (message.getTopicName().contains(CREATE_TOPIC_NAME)) {

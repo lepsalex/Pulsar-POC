@@ -1,5 +1,6 @@
 package com.lepsalex.github_integration;
 
+import com.lepsalex.integrations.TaskProtos;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.kohsuke.github.*;
@@ -24,7 +25,7 @@ public class GithubClient {
         gitHub = GitHub.connect();
     }
 
-    public Optional<GHIssue> createIssue(Task task){
+    public Optional<GHIssue> createIssue(TaskProtos.Task task){
         try {
             val repo = getRepo(task.getProject());
             return createIssue(task, repo);
@@ -34,7 +35,7 @@ public class GithubClient {
         }
     }
 
-    private Optional<GHIssue> createIssue(Task task, GHRepository repo) {
+    private Optional<GHIssue> createIssue(TaskProtos.Task task, GHRepository repo) {
         try {
             val newIssue = Optional.of(repo.createIssue(task.getTitle())
                     .body(task.getDescription())
@@ -49,7 +50,7 @@ public class GithubClient {
         }
     }
 
-    public Optional<GHIssue> updateIssue(Task task) {
+    public Optional<GHIssue> updateIssue(TaskProtos.Task task) {
         try {
             val repo = getRepo(task.getProject());
             Optional<GHIssue> issue = findIssue(repo, task.getTitle(), task.getProject());

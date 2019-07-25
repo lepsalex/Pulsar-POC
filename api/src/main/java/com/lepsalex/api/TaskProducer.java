@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.annotation.PostConstruct;
 
+import com.lepsalex.integrations.TaskProtos;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -29,8 +30,8 @@ public class TaskProducer {
     private String UPDATE_TOPIC_NAME = "task-update";
 
     public PulsarClient client;
-    public Producer<Task> taskNewProducer;
-    public Producer<Task> taskUpdateProducer;
+    public Producer<TaskProtos.Task> taskNewProducer;
+    public Producer<TaskProtos.Task> taskUpdateProducer;
 
     @PostConstruct
     public void startClient() throws IOException {
@@ -40,7 +41,7 @@ public class TaskProducer {
                 .serviceUrl(SERVICE_URL)
                 .build();
 
-            val msgSchema = JSONSchema.of(Task.class);
+            val msgSchema = JSONSchema.of(TaskProtos.Task.class);
 
             taskNewProducer = client.newProducer(msgSchema).topic(CREATE_TOPIC_NAME)
                     .compressionType(CompressionType.LZ4).create();

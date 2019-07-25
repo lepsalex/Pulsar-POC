@@ -43,6 +43,7 @@
     </dependency>
   </dependencies>
   <properties>
+    <protobuf.version>3.9.0</protobuf.version>
     <pulsar.version>2.4.0</pulsar.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
