@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package com.lepsalex.integrations;
+
+option java_package = "com.lepsalex.integrations";
+option java_outer_classname = "TaskMessage";
+
+message Task {
+    uint64 id = 1;
+    string project = 2;
+    string title = 3;
+    string description = 4;
+    string status = 5;
+}
