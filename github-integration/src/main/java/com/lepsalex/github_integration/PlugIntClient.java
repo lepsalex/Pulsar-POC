@@ -59,8 +59,8 @@ public class PlugIntClient {
                 try {
                     handleMessage(consumer, message);
                 } catch (SchemaSerializationException ex) {
+                    log.error(String.format("Failed to handle message: %s", message.getMessageId()), ex);
                     consumer.negativeAcknowledge(message.getMessageId());
-                    log.warn("Failed to handle message: ", message.getMessageId().toByteArray());
                 }
             } while (true);
         } catch (PulsarClientException err) {

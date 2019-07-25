@@ -65,10 +65,10 @@ public class GithubClient {
                         existingIssue.close();
                     }
 
-                    log.info("Issue succesfully udpated!", existingIssue);
+                    log.info("Issue successfully updated!");
                     return Optional.of(existingIssue);
                 } catch (IOException err) {
-                    log.error(String.format("Error updating issue %d!", existingIssue.getNumber()), err);
+                    log.error("Error updating issue!", err);
                     return Optional.empty();
                 }
             } else {
