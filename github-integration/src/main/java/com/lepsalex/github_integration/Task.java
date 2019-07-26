@@ -7,7 +7,7 @@ import lombok.NonNull;
 @Data
 @AllArgsConstructor
 public class Task {
-    private final long id;
+    @NonNull private final Long id;
     @NonNull private final String project;
     @NonNull private final String title;
     @NonNull private final String description;

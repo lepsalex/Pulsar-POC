@@ -18,6 +18,7 @@ public class GithubClient {
             put("awesome", "lepsalex/Pulsar-POC");
             put("possum", "lepsalex/Pulsar-POC");
             put("murder", "lepsalex/Pulsar-POC");
+            put("9001", "lepsalex/Pulsar-POC");
         }
     };
 
@@ -61,10 +62,10 @@ public class GithubClient {
                 try {
                     existingIssue.setBody(task.getDescription());
 
-                    if (task.getStatus().equals("open")) {
-                        existingIssue.reopen();
-                    } else {
+                    if (task.getStatus().equals("Complete")) {
                         existingIssue.close();
+                    } else {
+                        existingIssue.reopen();
                     }
 
                     log.info("Issue successfully updated!");
@@ -102,6 +103,6 @@ public class GithubClient {
     }
 
     private GHRepository getRepo(String project) throws IOException {
-        return gitHub.getRepository(projectToRepoMapping.get(project));
+        return gitHub.getRepository(projectToRepoMapping.getOrDefault(project, "lepsalex/Pulsar-POC"));
     }
 }
