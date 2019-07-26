@@ -13,7 +13,7 @@ import java.util.Optional;
 @Slf4j
 public class PlugIntClient {
     PulsarClient pulsarClient;
-    GithubClient gitHubClient;
+    IntegrationClient gitHubClient;
 
     private String CREATE_TOPIC_NAME = "task-new";
     private String UPDATE_TOPIC_NAME = "task-update";

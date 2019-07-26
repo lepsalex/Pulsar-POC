@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public class GithubClient {
+public class GithubClient implements IntegrationClient<GHIssue> {
     GitHub gitHub;
 
     final private Map<String, String> projectToRepoMapping = new HashMap<String, String>() {
