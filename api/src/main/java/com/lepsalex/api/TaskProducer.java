@@ -1,22 +1,18 @@
 package com.lepsalex.api;
 
-import java.io.IOException;
-
-import javax.annotation.PostConstruct;
-
-import com.lepsalex.integrations.TaskProtos;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import lombok.NoArgsConstructor;
-import lombok.val;
 import lombok.extern.log4j.Log4j2;
-
+import lombok.val;
 import org.apache.pulsar.client.api.CompressionType;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.impl.schema.JSONSchema;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.io.IOException;
 
 @Log4j2
 @Component
@@ -30,8 +26,8 @@ public class TaskProducer {
     private String UPDATE_TOPIC_NAME = "task-update";
 
     public PulsarClient client;
-    public Producer<TaskProtos.Task> taskNewProducer;
-    public Producer<TaskProtos.Task> taskUpdateProducer;
+    public Producer<Task> taskNewProducer;
+    public Producer<Task> taskUpdateProducer;
 
     @PostConstruct
     public void startClient() throws IOException {
@@ -41,7 +37,7 @@ public class TaskProducer {
                 .serviceUrl(SERVICE_URL)
                 .build();
 
-            val msgSchema = JSONSchema.of(TaskProtos.Task.class);
+            val msgSchema = JSONSchema.of(Task.class);
 
             taskNewProducer = client.newProducer(msgSchema).topic(CREATE_TOPIC_NAME)
                     .compressionType(CompressionType.LZ4).create();
