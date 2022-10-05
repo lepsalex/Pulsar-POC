@@ -44,7 +44,7 @@
     <properties>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
-        <pulsar.version>2.4.0</pulsar.version>
+        <pulsar.version>2.7.5</pulsar.version>
         <protobuf.version>3.9.0</protobuf.version>
     </properties>
 
